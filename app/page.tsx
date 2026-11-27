@@ -435,6 +435,12 @@ export default function Dashboard() {
     setStore(current => log({ ...current, batches: workingBatches, orders: current.orders.map(item => item.id === order.id ? nextOrder : item) }, "Confirmed sales order", order.id, `${order.customer} · ${order.items.reduce((sum, item) => sum + item.quantity, 0)} units deducted FIFO`)); notify(`${order.id} confirmed. Inventory was deducted from the oldest lots.`);
   }
 
+  function createInvoice(order: Order) {
+    const invoice = order.invoice || `INV-${order.id.replace("ORD-", "")}`;
+    setStore(current => log({ ...current, orders: current.orders.map(item => item.id === order.id ? { ...item, invoice, status: item.status === "Paid" ? "Paid" : "Invoiced" } : item) }, "Generated sales invoice", invoice, `To ${order.customer} · ${money(saleTotal(order))}`));
+    setEditId(order.id); setModal("invoice");
+  }
+
   function toggleInvoice(orderId:string,checked:boolean){setSelectedInvoices(current=>checked?[...new Set([...current,orderId])]:current.filter(id=>id!==orderId));}
   function generateSelectedInvoices(){
     const selected=invoiceOrders.filter(order=>selectedInvoices.includes(order.id));
